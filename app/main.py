@@ -5,6 +5,7 @@ from sqlalchemy import select
 from app.database import get_db, engine, Base
 from app import models
 from app.schemas import JobCreate, JobRead
+from app.queue import enqueue_job
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,6 +28,7 @@ def create_job(job: JobCreate, db: Session = Depends(get_db)):
     db.add(new_job)
     db.commit()
     db.refresh(new_job)
+    enqueue_job(new_job.id)
     return new_job
 
 

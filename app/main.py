@@ -13,14 +13,14 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="TaskFlow", description="A distributed job processing platform")
 
 
+@app.get("/")
+def read_root():
+    return FileResponse("static/index.html")
+
+
 @app.get("/dashboard")
 def dashboard():
     return FileResponse("static/dashboard.html")
-
-
-@app.get("/")
-def read_root():
-    return {"service": "TaskFlow", "message": "Welcome to the TaskFlow API"}
 
 
 @app.get("/health")

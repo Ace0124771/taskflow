@@ -9,6 +9,9 @@
     header { background: #1e293b; padding: 20px; }
     h1 { margin: 0; font-size: 24px; }
     .subtitle { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+    .nav { margin-top: 12px; }
+    .nav a { color: #60a5fa; text-decoration: none; margin-right: 16px; font-size: 14px; }
+    .nav a:hover { text-decoration: underline; }
     .container { padding: 20px; }
     .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
     .card { background: #1e293b; border-radius: 10px; padding: 16px 20px; min-width: 110px; }
@@ -29,6 +32,10 @@
   <header>
     <h1>TaskFlow Dashboard</h1>
     <div class="subtitle">Live view of the distributed job processing platform</div>
+    <div class="nav">
+      <a href="/">Home</a>
+      <a href="/docs">View API docs</a>
+    </div>
   </header>
   <div class="container">
     <div class="cards" id="cards"></div>

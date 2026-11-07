@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app.database import get_db, engine, Base
 from app import models
 from app.schemas import JobCreate, JobRead
-from app.queue import enqueue_job
+from app.queue import enqueue_job, redis_client, DEAD_LETTER_NAME
 
 Base.metadata.create_all(bind=engine)
 
@@ -33,8 +33,32 @@ def create_job(job: JobCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/jobs", response_model=list[JobRead])
-def list_jobs(db: Session = Depends(get_db)):
-    jobs = db.execute(select(models.Job).order_by(models.Job.id)).scalars().all()
+def list_jobs(status: str | None = None, db: Session = Depends(get_db)):
+    query = select(models.Job).order_by(models.Job.id)
+    if status is not None:
+        query = query.where(models.Job.status == status)
+    jobs = db.execute(query).scalars().all()
+    return jobs
+
+
+@app.get("/stats")
+def job_stats(db: Session = Depends(get_db)):
+    rows = db.execute(
+        select(models.Job.status, func.count()).group_by(models.Job.status)
+    ).all()
+    counts = {row[0]: row[1] for row in rows}
+    total = sum(counts.values())
+    return {"total": total, "by_status": counts}
+
+
+@app.get("/dead", response_model=list[JobRead])
+def dead_letter(db: Session = Depends(get_db)):
+    ids = redis_client.lrange(DEAD_LETTER_NAME, 0, -1)
+    jobs = []
+    for job_id in ids:
+        job = db.get(models.Job, int(job_id))
+        if job is not None:
+            jobs.append(job)
     return jobs
 
 

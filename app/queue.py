@@ -5,6 +5,7 @@ redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=T
 QUEUE_NAME = "taskflow:jobs"
 DEAD_LETTER_NAME = "taskflow:dead"
 MAX_ATTEMPTS = 3
+JOB_TIMEOUT_SECONDS = 5
 
 
 def enqueue_job(job_id: int):

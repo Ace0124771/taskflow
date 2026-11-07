@@ -1,3 +1,4 @@
+import signal
 import time
 
 from app.database import SessionLocal
@@ -6,10 +7,19 @@ from app.queue import (
     redis_client,
     QUEUE_NAME,
     MAX_ATTEMPTS,
+    JOB_TIMEOUT_SECONDS,
     enqueue_job,
     move_to_dead_letter,
 )
 from app.tasks import run_task
+
+
+class JobTimeout(Exception):
+    pass
+
+
+def _timeout_handler(signum, frame):
+    raise JobTimeout(f"job exceeded the {JOB_TIMEOUT_SECONDS} second time limit")
 
 
 def process_one(job_id):
@@ -24,13 +34,17 @@ def process_one(job_id):
         job.status = "running"
         job.attempts = attempt
         db.commit()
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(JOB_TIMEOUT_SECONDS)
         try:
             result = run_task(job.task_type, job.payload)
+            signal.alarm(0)
             job.status = "success"
             job.result = str(result)
             db.commit()
             print(f"Job {job.id} succeeded with result: {result}")
         except Exception as error:
+            signal.alarm(0)
             if job.attempts < MAX_ATTEMPTS:
                 job.status = "pending"
                 job.result = f"attempt {job.attempts} failed: {error}"

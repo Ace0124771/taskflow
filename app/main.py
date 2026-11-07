@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 
@@ -10,6 +11,11 @@ from app.queue import enqueue_job, redis_client, DEAD_LETTER_NAME
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TaskFlow", description="A distributed job processing platform")
+
+
+@app.get("/dashboard")
+def dashboard():
+    return FileResponse("static/dashboard.html")
 
 
 @app.get("/")

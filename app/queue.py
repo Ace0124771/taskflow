@@ -1,6 +1,10 @@
+import os
+
 import redis
 
-redis_client = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
+REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
+
+redis_client = redis.Redis(host=REDIS_HOST, port=6379, db=0, decode_responses=True)
 
 QUEUE_NAME = "taskflow:jobs"
 DEAD_LETTER_NAME = "taskflow:dead"
